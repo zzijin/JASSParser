@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace JassSyntaxAnalyzer
 {
-    public enum SyntaxTokenType
+    public enum SyntaxKind
     {
         //关键字
         Keyword,

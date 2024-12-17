@@ -1,6 +1,6 @@
 ﻿namespace JassSyntaxAnalyzer
 {
-    public struct SyntaxToken
+    public readonly struct SyntaxToken
     {
 
     }

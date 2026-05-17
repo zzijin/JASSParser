@@ -100,6 +100,7 @@ namespace JassSyntaxAnalyzer
     {
         public SyntaxToken? ConstantKeyword { get; }
         public SyntaxToken TypeKeyword { get; }
+        public SyntaxToken? ArrayKeyword { get; }
         public SyntaxToken Identifier { get; }
         public SyntaxToken? EqualsToken { get; }
         public ExpressionSyntax? Initializer { get; }
@@ -107,6 +108,7 @@ namespace JassSyntaxAnalyzer
         public GlobalDeclarationSyntax(
             SyntaxToken? constantKeyword,
             SyntaxToken typeKeyword,
+            SyntaxToken? arrayKeyword,
             SyntaxToken identifier,
             SyntaxToken? equalsToken,
             ExpressionSyntax? initializer)
@@ -114,6 +116,7 @@ namespace JassSyntaxAnalyzer
         {
             ConstantKeyword = constantKeyword;
             TypeKeyword = typeKeyword;
+            ArrayKeyword = arrayKeyword;
             Identifier = identifier;
             EqualsToken = equalsToken;
             Initializer = initializer;
@@ -128,6 +131,7 @@ namespace JassSyntaxAnalyzer
         {
             if (ConstantKeyword != null) yield return ConstantKeyword.Value;
             yield return TypeKeyword;
+            if (ArrayKeyword != null) yield return ArrayKeyword.Value;
             yield return Identifier;
             if (EqualsToken != null) yield return EqualsToken.Value;
             if (Initializer != null)

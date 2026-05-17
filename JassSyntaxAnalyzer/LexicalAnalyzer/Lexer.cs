@@ -46,6 +46,8 @@ namespace JassSyntaxAnalyzer
             ["string"] = SyntaxKind.StringKeyword,
             ["code"] = SyntaxKind.CodeKeyword,
             ["nothing"] = SyntaxKind.NothingKeyword,
+            ["array"] = SyntaxKind.ArrayKeyword,
+            ["debug"] = SyntaxKind.DebugKeyword,
         };
 
         public Lexer(string text)
@@ -93,8 +95,9 @@ namespace JassSyntaxAnalyzer
             if (ch == '\'')
                 return ReadFourCharCode(startLine, startCol);
 
-            // Number literal
-            if (char.IsDigit(ch) || (ch == '.' && Peek(1) >= '0' && Peek(1) <= '9'))
+            // Number literal (including $hex)
+            if (char.IsDigit(ch) || (ch == '.' && Peek(1) >= '0' && Peek(1) <= '9') ||
+                (ch == '$' && Peek(1) != '\0' && IsHexDigit(Peek(1))))
                 return ReadNumberLiteral(startLine, startCol);
 
             // Identifier or keyword
@@ -200,6 +203,18 @@ namespace JassSyntaxAnalyzer
         {
             var sb = new StringBuilder();
             bool isReal = false;
+
+            // Handle JASS hex: $08, $1A, etc.
+            if (_text[_pos] == '$')
+            {
+                sb.Append(_text[_pos]); Advance(); // '$'
+                while (_pos < _text.Length && IsHexDigit(_text[_pos]))
+                {
+                    sb.Append(_text[_pos]); Advance();
+                }
+                int value = Convert.ToInt32(sb.ToString()[1..], 16);
+                return new SyntaxToken(SyntaxKind.IntegerLiteralToken, sb.ToString(), value, line, col);
+            }
 
             // Handle hex: 0x or 0X
             if (_text[_pos] == '0' && _pos + 1 < _text.Length &&

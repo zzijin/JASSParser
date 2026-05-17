@@ -3,7 +3,6 @@ namespace JassSyntaxAnalyzer
     public class Binder
     {
         private readonly DiagnosticBag _diagnostics = new();
-        private readonly SymbolTable _globals = new();
         private readonly Dictionary<string, FunctionSymbol> _functions = new();
         private readonly Dictionary<string, Symbol> _nativeFunctions = new();
         private readonly Dictionary<string, TypeSymbol> _types = new();
@@ -11,9 +10,9 @@ namespace JassSyntaxAnalyzer
 
         public IReadOnlyList<Diagnostic> Diagnostics => _diagnostics.Diagnostics;
 
-        public void Bind(CompilationUnitSyntax compilationUnit)
+        /// <summary>Load type, native, global, and function declarations (no body checks).</summary>
+        public void LoadPrelude(CompilationUnitSyntax compilationUnit)
         {
-            // Pass 1: collect declarations
             foreach (var decl in compilationUnit.Declarations)
             {
                 switch (decl)
@@ -26,7 +25,6 @@ namespace JassSyntaxAnalyzer
                         break;
                 }
             }
-
             foreach (var decl in compilationUnit.Declarations)
             {
                 switch (decl)
@@ -39,8 +37,14 @@ namespace JassSyntaxAnalyzer
                         break;
                 }
             }
+        }
 
-            // Pass 2: check function bodies
+        /// <summary>Bind a compilation unit: collect its declarations, then check function bodies.</summary>
+        public void Bind(CompilationUnitSyntax compilationUnit)
+        {
+            LoadPrelude(compilationUnit);
+
+            // Check function bodies
             foreach (var decl in compilationUnit.Declarations)
             {
                 if (decl is FunctionDeclarationSyntax funcDecl)
@@ -166,6 +170,14 @@ namespace JassSyntaxAnalyzer
                     CheckBlock(blockStmt, scope.CreateChild(), expectedReturnType);
                     break;
 
+                case DebugStatementSyntax debugStmt:
+                    CheckStatement(debugStmt.Statement, scope, expectedReturnType);
+                    break;
+
+                case ExpressionStatementSyntax exprStmt:
+                    CheckExpression(exprStmt.Expression, scope);
+                    break;
+
                 default:
                     break;
             }
@@ -205,6 +217,9 @@ namespace JassSyntaxAnalyzer
                 case ParenthesizedExpressionSyntax parenExpr:
                     CheckExpression(parenExpr.Expression, scope);
                     break;
+
+                case FunctionReferenceExpressionSyntax:
+                    break;
             }
         }
 
@@ -221,9 +236,7 @@ namespace JassSyntaxAnalyzer
                 return;
             }
 
-            var parameters = func?.Parameters ?? ((NativeSymbol)_nativeFunctions[name]!).Parameters;
-
-            // Check argument count (if parameter has a name)
+            var parameters = func?.Parameters ?? native!.Parameters;
             var realParams = parameters.Where(p => p.Name != "").ToList();
             if (args.Count != realParams.Count)
                 _diagnostics.Add($"Function '{name}' expects {realParams.Count} arguments, got {args.Count}", line, col);

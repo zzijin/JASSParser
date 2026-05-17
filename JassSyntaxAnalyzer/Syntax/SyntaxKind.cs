@@ -40,6 +40,8 @@ namespace JassSyntaxAnalyzer
         StringKeyword,
         CodeKeyword,
         NothingKeyword,
+        ArrayKeyword,
+        DebugKeyword,
 
         // Tokens — literals and identifiers
         IdentifierToken,
@@ -93,6 +95,7 @@ namespace JassSyntaxAnalyzer
         LoopStatement,
         ExitWhenStatement,
         ReturnStatement,
+        DebugStatement,
 
         // Nodes — expressions
         LiteralExpression,
@@ -102,5 +105,6 @@ namespace JassSyntaxAnalyzer
         FunctionCallExpression,
         ArrayAccessExpression,
         ParenthesizedExpression,
+        FunctionReferenceExpression,
     }
 }

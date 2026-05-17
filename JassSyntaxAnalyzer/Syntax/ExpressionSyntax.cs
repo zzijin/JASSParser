@@ -176,6 +176,26 @@ namespace JassSyntaxAnalyzer
         }
     }
 
+    public sealed class FunctionReferenceExpressionSyntax : ExpressionSyntax
+    {
+        public SyntaxToken FunctionKeyword { get; }
+        public SyntaxToken Identifier { get; }
+
+        public FunctionReferenceExpressionSyntax(SyntaxToken functionKeyword, SyntaxToken identifier)
+            : base(SyntaxKind.FunctionReferenceExpression)
+        {
+            FunctionKeyword = functionKeyword;
+            Identifier = identifier;
+        }
+
+        public override IEnumerable<SyntaxNode> GetChildren() { yield break; }
+        public override IEnumerable<SyntaxToken> GetTokens()
+        {
+            yield return FunctionKeyword;
+            yield return Identifier;
+        }
+    }
+
     // ---- Helper: comma-separated list ----
 
     public sealed class SeparatedList<T> where T : SyntaxNode

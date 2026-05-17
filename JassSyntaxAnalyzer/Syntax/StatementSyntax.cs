@@ -42,6 +42,7 @@ namespace JassSyntaxAnalyzer
     {
         public SyntaxToken LocalKeyword { get; }
         public SyntaxToken TypeKeyword { get; }
+        public SyntaxToken? ArrayKeyword { get; }
         public SyntaxToken Identifier { get; }
         public SyntaxToken? EqualsToken { get; }
         public ExpressionSyntax? Initializer { get; }
@@ -49,6 +50,7 @@ namespace JassSyntaxAnalyzer
         public LocalDeclarationStatementSyntax(
             SyntaxToken localKeyword,
             SyntaxToken typeKeyword,
+            SyntaxToken? arrayKeyword,
             SyntaxToken identifier,
             SyntaxToken? equalsToken,
             ExpressionSyntax? initializer)
@@ -56,6 +58,7 @@ namespace JassSyntaxAnalyzer
         {
             LocalKeyword = localKeyword;
             TypeKeyword = typeKeyword;
+            ArrayKeyword = arrayKeyword;
             Identifier = identifier;
             EqualsToken = equalsToken;
             Initializer = initializer;
@@ -70,6 +73,7 @@ namespace JassSyntaxAnalyzer
         {
             yield return LocalKeyword;
             yield return TypeKeyword;
+            if (ArrayKeyword != null) yield return ArrayKeyword.Value;
             yield return Identifier;
             if (EqualsToken != null) yield return EqualsToken.Value;
             if (Initializer != null)
@@ -297,6 +301,26 @@ namespace JassSyntaxAnalyzer
             yield return ReturnKeyword;
             if (Expression != null)
                 foreach (var t in Expression.GetTokens()) yield return t;
+        }
+    }
+
+    public sealed class DebugStatementSyntax : StatementSyntax
+    {
+        public SyntaxToken DebugKeyword { get; }
+        public StatementSyntax Statement { get; }
+
+        public DebugStatementSyntax(SyntaxToken debugKeyword, StatementSyntax statement)
+            : base(SyntaxKind.DebugStatement)
+        {
+            DebugKeyword = debugKeyword;
+            Statement = statement;
+        }
+
+        public override IEnumerable<SyntaxNode> GetChildren() { yield return Statement; }
+        public override IEnumerable<SyntaxToken> GetTokens()
+        {
+            yield return DebugKeyword;
+            foreach (var t in Statement.GetTokens()) yield return t;
         }
     }
 }

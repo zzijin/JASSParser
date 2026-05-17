@@ -146,6 +146,11 @@ namespace JassSyntaxAnalyzer
             }
 
             var type = ParseType();
+
+            SyntaxToken? arrayKw = null;
+            if (Current.Kind == SyntaxKind.ArrayKeyword)
+                arrayKw = Next();
+
             var name = Expect(SyntaxKind.IdentifierToken);
             SyntaxToken? equals = null;
             ExpressionSyntax? init = null;
@@ -156,7 +161,7 @@ namespace JassSyntaxAnalyzer
                 init = ParseExpression();
             }
 
-            return new GlobalDeclarationSyntax(constantKw, type, name, equals, init);
+            return new GlobalDeclarationSyntax(constantKw, type, arrayKw, name, equals, init);
         }
 
         private TypeDeclarationSyntax ParseTypeDeclaration()
@@ -164,7 +169,7 @@ namespace JassSyntaxAnalyzer
             var typeKw = Expect(SyntaxKind.TypeKeyword);
             var name = Expect(SyntaxKind.IdentifierToken);
             var extendsKw = Expect(SyntaxKind.ExtendsKeyword);
-            var parent = Expect(SyntaxKind.IdentifierToken);
+            var parent = ParseType();
             return new TypeDeclarationSyntax(typeKw, name, extendsKw, parent);
         }
 
@@ -236,10 +241,13 @@ namespace JassSyntaxAnalyzer
                     return ParseExitWhenStatement();
                 case SyntaxKind.ReturnKeyword:
                     return ParseReturnStatement();
+                case SyntaxKind.DebugKeyword:
+                    return ParseDebugStatement();
                 default:
                     SkipToSync(SyntaxKind.LocalKeyword, SyntaxKind.SetKeyword, SyntaxKind.CallKeyword,
                         SyntaxKind.IfKeyword, SyntaxKind.LoopKeyword, SyntaxKind.ExitWhenKeyword,
-                        SyntaxKind.ReturnKeyword, SyntaxKind.EndFunctionKeyword, SyntaxKind.EndIfKeyword,
+                        SyntaxKind.ReturnKeyword, SyntaxKind.DebugKeyword,
+                        SyntaxKind.EndFunctionKeyword, SyntaxKind.EndIfKeyword,
                         SyntaxKind.EndLoopKeyword, SyntaxKind.EndGlobalsKeyword,
                         SyntaxKind.FunctionKeyword, SyntaxKind.EndOfFileToken);
                     return null;
@@ -250,6 +258,11 @@ namespace JassSyntaxAnalyzer
         {
             var localKw = Expect(SyntaxKind.LocalKeyword);
             var type = ParseType();
+
+            SyntaxToken? arrayKw = null;
+            if (Current.Kind == SyntaxKind.ArrayKeyword)
+                arrayKw = Next();
+
             var name = Expect(SyntaxKind.IdentifierToken);
             SyntaxToken? equals = null;
             ExpressionSyntax? init = null;
@@ -260,7 +273,7 @@ namespace JassSyntaxAnalyzer
                 init = ParseExpression();
             }
 
-            return new LocalDeclarationStatementSyntax(localKw, type, name, equals, init);
+            return new LocalDeclarationStatementSyntax(localKw, type, arrayKw, name, equals, init);
         }
 
         private SetStatementSyntax ParseSetStatement()
@@ -296,54 +309,70 @@ namespace JassSyntaxAnalyzer
 
         private IfStatementSyntax ParseIfStatement()
         {
-            var ifKw = Expect(SyntaxKind.IfKeyword);
-            var openP = Expect(SyntaxKind.OpenParenToken);
-            var condition = ParseExpression();
-            var closeP = Expect(SyntaxKind.CloseParenToken);
-            var thenKw = Expect(SyntaxKind.ThenKeyword);
+            return ParseIfCore(consumeEndIf: true);
+        }
 
-            // Parse then-body: single statement or multiple until else/elseif/endif
-            var thenStmts = new List<StatementSyntax>();
-            while (Current.Kind != SyntaxKind.ElseKeyword &&
-                   Current.Kind != SyntaxKind.ElseIfKeyword &&
-                   Current.Kind != SyntaxKind.EndIfKeyword &&
-                   Current.Kind != SyntaxKind.EndOfFileToken)
+        private IfStatementSyntax ParseIfCore(bool consumeEndIf)
+        {
+            SyntaxToken ifKw;
+            SyntaxToken openP;
+            ExpressionSyntax condition;
+            SyntaxToken closeP;
+            SyntaxToken thenKw;
+
+            if (Current.Kind == SyntaxKind.IfKeyword)
             {
-                var s = ParseStatement();
-                if (s != null) thenStmts.Add(s);
-                else break;
+                ifKw = Expect(SyntaxKind.IfKeyword);
             }
-            StatementSyntax thenBody = thenStmts.Count == 1
-                ? thenStmts[0]
-                : new BlockStatementSyntax(thenStmts);
+            else // elseif
+            {
+                ifKw = Expect(SyntaxKind.ElseIfKeyword);
+            }
+
+            // Condition is a full expression — parentheses are part of the expression itself
+            condition = ParseExpression();
+            openP = new SyntaxToken(SyntaxKind.OpenParenToken, "(", null, 0, 0);
+            closeP = new SyntaxToken(SyntaxKind.CloseParenToken, ")", null, 0, 0);
+            thenKw = Expect(SyntaxKind.ThenKeyword);
+
+            var thenBody = ParseBodyUntil(SyntaxKind.ElseKeyword, SyntaxKind.ElseIfKeyword, SyntaxKind.EndIfKeyword);
 
             SyntaxToken? elseKw = null;
             StatementSyntax? elseBody = null;
 
-            // Handle elseif
-            if (Current.Kind == SyntaxKind.ElseIfKeyword)
-            {
-                // Desugar elseif into nested if in else branch
-                elseKw = Expect(SyntaxKind.ElseKeyword); // placeholder
-                elseBody = ParseIfStatement(); // parse as child if
-            }
-            else if (Current.Kind == SyntaxKind.ElseKeyword)
+            if (Current.Kind == SyntaxKind.ElseKeyword)
             {
                 elseKw = Next();
-                var elseStmts = new List<StatementSyntax>();
-                while (Current.Kind != SyntaxKind.EndIfKeyword && Current.Kind != SyntaxKind.EndOfFileToken)
-                {
-                    var s = ParseStatement();
-                    if (s != null) elseStmts.Add(s);
-                    else break;
-                }
-                elseBody = elseStmts.Count == 1
-                    ? elseStmts[0]
-                    : new BlockStatementSyntax(elseStmts);
+                elseBody = ParseBodyUntil(SyntaxKind.EndIfKeyword);
+            }
+            else if (Current.Kind == SyntaxKind.ElseIfKeyword)
+            {
+                // Desugar elseif into nested if-in-else; inner call does NOT consume endif
+                elseKw = new SyntaxToken(SyntaxKind.ElseKeyword, "elseif", null, Current.Line, Current.Column);
+                elseBody = ParseIfCore(consumeEndIf: false);
             }
 
-            var endIfKw = Expect(SyntaxKind.EndIfKeyword);
+            SyntaxToken endIfKw;
+            if (consumeEndIf)
+                endIfKw = Expect(SyntaxKind.EndIfKeyword);
+            else
+                endIfKw = new SyntaxToken(SyntaxKind.EndIfKeyword, "endif", null, Current.Line, Current.Column);
+
             return new IfStatementSyntax(ifKw, openP, condition, closeP, thenKw, thenBody, elseKw, elseBody, endIfKw);
+        }
+
+        private StatementSyntax ParseBodyUntil(params SyntaxKind[] terminators)
+        {
+            var stmts = new List<StatementSyntax>();
+            while (!terminators.Contains(Current.Kind) && Current.Kind != SyntaxKind.EndOfFileToken)
+            {
+                var s = ParseStatement();
+                if (s != null) stmts.Add(s);
+                else break;
+            }
+            return stmts.Count == 1
+                ? stmts[0]
+                : new BlockStatementSyntax(stmts);
         }
 
         private LoopStatementSyntax ParseLoopStatement()
@@ -396,6 +425,13 @@ namespace JassSyntaxAnalyzer
             return new ReturnStatementSyntax(retKw, expr);
         }
 
+        private DebugStatementSyntax ParseDebugStatement()
+        {
+            var debugKw = Expect(SyntaxKind.DebugKeyword);
+            var stmt = ParseStatement()!;
+            return new DebugStatementSyntax(debugKw, stmt);
+        }
+
         // ---- Expressions (Pratt parser) ----
 
         private ExpressionSyntax ParseExpression(int minPrecedence = 0)
@@ -438,6 +474,14 @@ namespace JassSyntaxAnalyzer
                 case SyntaxKind.FalseKeyword:
                 case SyntaxKind.NullKeyword:
                     return new LiteralExpressionSyntax(Next());
+
+                // Function reference (for 'code' type): function FuncName
+                case SyntaxKind.FunctionKeyword:
+                {
+                    var funcKw = Next();
+                    var funcId = Expect(SyntaxKind.IdentifierToken);
+                    return new FunctionReferenceExpressionSyntax(funcKw, funcId);
+                }
 
                 // Identifier — could be function call, array access, or plain identifier
                 case SyntaxKind.IdentifierToken:

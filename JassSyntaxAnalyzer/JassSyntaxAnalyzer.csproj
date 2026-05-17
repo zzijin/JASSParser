@@ -6,10 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="CodeAnalyzer\" />
-    <Folder Include="LexicalAnalyzer\" />
-    <Folder Include="SemanticAnalyzer\" />
-  </ItemGroup>
-
 </Project>

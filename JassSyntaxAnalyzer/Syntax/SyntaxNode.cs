@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace JassSyntaxAnalyzer
 {
-    internal class SyntaxNode
+    public abstract class SyntaxNode
     {
-        //节点类型
-        private SyntaxKind syntaxKind;
-        //此节点是否缺失
-        private bool isMissing;
+        public SyntaxKind Kind { get; }
+        public abstract IEnumerable<SyntaxNode> GetChildren();
+        public abstract IEnumerable<SyntaxToken> GetTokens();
+
+        protected SyntaxNode(SyntaxKind kind)
+        {
+            Kind = kind;
+        }
     }
 }

@@ -1,0 +1,73 @@
+{
+  "name": "JASS",
+  "scopeName": "source.jass",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#rawcodes" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#constants" },
+    { "include": "#operators" },
+    { "include": "#functions" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.jass", "match": "//.*$" }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.jass",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        { "name": "constant.character.escape.jass", "match": "\\\\[nrt\"\\\\]" }
+      ]
+    },
+    "rawcodes": {
+      "name": "string.quoted.single.jass",
+      "match": "'[A-Za-z0-9]{4}'"
+    },
+    "numbers": {
+      "patterns": [
+        { "name": "constant.numeric.hex.jass", "match": "\\$[0-9a-fA-F]+" },
+        { "name": "constant.numeric.hex.jass", "match": "\\b0[xX][0-9a-fA-F]+" },
+        { "name": "constant.numeric.real.jass", "match": "\\b[0-9]+\\.[0-9]+\\b" },
+        { "name": "constant.numeric.integer.jass", "match": "\\b[0-9]+\\b" }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        { "name": "keyword.control.jass", "match": "\\b(function|endfunction|takes|returns|local|set|call|if|then|else|elseif|endif|loop|endloop|exitwhen|return|globals|endglobals|debug)\\b" },
+        { "name": "keyword.other.jass", "match": "\\b(type|extends|native|constant|array|library|endlibrary|initializer)\\b" },
+        { "name": "keyword.operator.jass", "match": "\\b(and|or|not)\\b" }
+      ]
+    },
+    "types": {
+      "name": "storage.type.jass",
+      "match": "\\b(integer|real|boolean|string|code|handle|nothing)\\b"
+    },
+    "constants": {
+      "patterns": [
+        { "name": "constant.language.null.jass", "match": "\\bnull\\b" },
+        { "name": "constant.language.boolean.jass", "match": "\\b(true|false)\\b" }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        { "name": "keyword.operator.comparison.jass", "match": "==|!=|<=|>=|<|>" },
+        { "name": "keyword.operator.assignment.jass", "match": "=" },
+        { "name": "keyword.operator.arithmetic.jass", "match": "\\+|\\-|\\*|/" }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        { "name": "entity.name.function.jass", "match": "(?<=function )[A-Za-z_][A-Za-z0-9_]*" },
+        { "name": "entity.name.function.call.jass", "match": "(?<=call )[A-Za-z_][A-Za-z0-9_]*" },
+        { "name": "support.function.builtin.jass", "match": "\\b(CreateTrigger|GetTriggerUnit|GetSpellAbilityId|Condition|ForGroupBJ|RemoveLocation|DisplayTextToPlayer|GetEnumUnit|GetLastCreatedUnit|GetOwningPlayer|IssueTargetOrderBJ)\\b" }
+      ]
+    }
+  }
+}

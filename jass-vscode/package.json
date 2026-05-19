@@ -1,0 +1,52 @@
+{
+  "name": "jass-vscode",
+  "displayName": "JASS Language Support",
+  "description": "JASS scripting language support for Warcraft III maps",
+  "version": "0.1.0",
+  "publisher": "jassparser",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:jass"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "jass",
+        "aliases": [
+          "JASS",
+          "jass"
+        ],
+        "extensions": [
+          ".j",
+          ".jass"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "jass",
+        "scopeName": "source.jass",
+        "path": "./syntaxes/jass.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./ && npm run copy-server",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "copy-server": "mkdir -p server && cp ../JassLanguageServer/bin/Debug/net8.0/JassLanguageServer.* server/ && cp ../JassLanguageServer/bin/Debug/net8.0/JassSyntaxAnalyzer.* server/ && cp -r ../JassRef server/",
+    "setup": "npm install && npm run compile && npm run copy-server"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  }
+}

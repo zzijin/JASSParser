@@ -12,20 +12,22 @@ JASSParser/
 │   ├── SemanticAnalyzer/    语义分析（Binder + 符号表）
 │   └── CodeAnalyzer/        诊断信息
 ├── JassParserTest/          测试程序
+├── JassLanguageServer/      LSP 语言服务端
+├── jass-vscode/             VS Code 扩展（语法高亮 + 语言服务客户端）
 └── JassRef/                 参考文件
-    ├── common.j             Warcraft III 核心 API
-    └── blizzard.j           Blizzard 封装 API
+    ├── common.j             Warcraft III 核心 API（1683 声明）
+    └── blizzard.j           Blizzard 封装 API（986 声明）
 ```
 
 ## 使用
 
 ```csharp
-// 1. 语法分析
+// 语法分析
 var tree = SyntaxTree.Parse(jassSourceText);
 // tree.Root          — AST 根节点 (CompilationUnitSyntax)
 // tree.Diagnostics   — 语法错误列表
 
-// 2. 语义分析（需要加载标准库作为上下文）
+// 语义分析（需要加载标准库作为上下文）
 var commonTree = SyntaxTree.Parse(File.ReadAllText("common.j"));
 var blizzardTree = SyntaxTree.Parse(File.ReadAllText("blizzard.j"));
 

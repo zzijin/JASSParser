@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/jass-vscode",
+                "${workspaceFolder}/JassRef"
+            ],
+            "preLaunchTask": "preLaunch",
+            "outFiles": ["${workspaceFolder}/jass-vscode/out/**/*.js"]
+        },
+        {
+            "name": "Attach to LanguageServer",
+            "type": "coreclr",
+            "request": "attach",
+            "processName": "JassLanguageServer.exe"
+        }
+    ]
+}

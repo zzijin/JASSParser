@@ -361,3 +361,19 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# ====== Project-specific ======
+
+# Claude Code
+.claude/
+
+# VS Code extension — copied server binaries
+jass-vscode/server/
+
+# VS Code extension — TypeScript output
+jass-vscode/out/
+jass-vscode/*.tsbuildinfo
+
+# VS Code extension — npm
+jass-vscode/node_modules/
+jass-vscode/package-lock.json
